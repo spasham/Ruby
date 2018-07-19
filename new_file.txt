@@ -1,0 +1,111 @@
+#version=DEVEL
+# System authorization information
+auth --useshadow  --enablemd5
+# Install OS instead of upgrade
+install
+# License agreement
+eula --agreed
+repo --name="Server-HighAvailability" --baseurl=file:///run/install/repo/addons/HighAvailability
+repo --name="Server-ResilientStorage" --baseurl=file:///run/install/repo/addons/ResilientStorage
+# Use CDROM installation media
+cdrom
+# Use text mode install
+text
+# Firewall configuration
+firewall --disabled
+firstboot --disable
+ignoredisk --only-use=sda,sdb
+# Keyboard layouts
+# old format: keyboard us
+# new format:
+keyboard --vckeymap=us --xlayouts=''
+# System language
+lang en_US.UTF-8
+
+# Network information
+network  --bootproto=dhcp --device=eth0 --noipv6
+network  --hostname=localhost.localdomain
+# Reboot after installation
+reboot
+# Root password
+rootpw --iscrypted $1$lrR/FblS$efFWt1hx9RTu/lR2ABOce/
+# SELinux configuration
+selinux --permissive
+# System services
+services --enabled="chronyd"
+# Do not configure the X Window System
+skipx
+# System timezone
+timezone America/Chicago
+# System bootloader configuration
+bootloader --append="rhgb quiet crashkernel=auto" --location=mbr --driveorder="sda" --boot-drive=sda
+# Clear the Master Boot Record
+zerombr
+# Partition clearing information
+clearpart --all --initlabel --drives=sda,sdb
+# Disk partitioning information
+part /boot --fstype="xfs" --ondisk=sda --size=1023
+volgroup rootvg --pesize=32768 pv.12
+logvol /var/chef  --fstype="xfs" --size=512 --name=lv_var_chef --vgname=rootvg
+logvol /var/log/audit  --fstype="xfs" --size=512 --name=lv_var_log_audit --vgname=rootvg
+logvol /tmp  --fstype="xfs" --size=4096 --name=lv_tmp --vgname=rootvg
+logvol /var/crash  --fstype="xfs" --size=3072 --name=lv_var_crash --vgname=rootvg
+logvol /  --fstype="xfs" --size=6144 --name=lv_root --vgname=rootvg
+logvol /var/opt/OV  --fstype="xfs" --size=2048 --name=lv_var_opt_ov --vgname=rootvg
+logvol /var/core  --fstype="xfs" --size=1024 --name=lv_var_core --vgname=rootvg
+logvol swap  --fstype="swap" --size=2048 --name=lv_swap --vgname=rootvg
+logvol /home  --fstype="xfs" --size=1024 --name=lv_home --vgname=rootvg
+logvol /var/log  --fstype="xfs" --size=3072 --name=lv_var_log --vgname=rootvg
+logvol /opt  --fstype="xfs" --size=2048 --name=lv_opt --vgname=rootvg
+logvol /var  --fstype="xfs" --size=4096 --name=lv_var --vgname=rootvg
+
+%post
+/usr/sbin/groupadd -g 1001 vagrant
+/usr/sbin/useradd vagrant -u 1001 -g vagrant -G wheel
+echo "vagrant"|passwd --stdin vagrant
+echo "vagrant        ALL=(ALL)       NOPASSWD: ALL" >> /etc/sudoers.d/vagrant
+echo "Defaults:vagrant !requiretty"                 >> /etc/sudoers.d/vagrant
+chmod 0440 /etc/sudoers.d/vagrant
+%end
+
+%packages --ignoremissing
+@base
+chrony
+deltarpm
+dmidecode
+expect
+ftp
+iotop
+iptraf
+kernel-devel
+kernel-headers
+kexec-tools
+kexec-tools
+ksh
+lsscsi
+net-snmp
+net-snmp-libs
+nfs-utils
+nscd
+nss-pam-ldapd
+ntp
+open-vm-tools
+redhat-lsb-core
+sg3_utils
+strace
+sudo
+sysfsutils
+system-config-kdump
+telnet
+tmpwatch
+vsftpd
+xinetd
+xorg-x11-fonts-Type1
+xorg-x11-xauth
+xterm
+
+%end
+
+%addon com_redhat_kdump --enable --reserve-mb='auto'
+
+%end
